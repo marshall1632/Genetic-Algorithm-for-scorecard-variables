@@ -17,7 +17,7 @@ X_scaled = scaler.fit_transform(X_encoded)
 feature_names = X_encoded.columns.tolist()
 
 # Genetic Algorithm Parameters
-population_size = 10
+population_size = 41188
 num_generations = 20
 mutation_rate = 0.1
 num_features = X_scaled.shape[1]  # Number of features
@@ -26,24 +26,24 @@ num_features = X_scaled.shape[1]  # Number of features
 def initialize_population():
     population = []
     for _ in range(population_size):
-        individual = np.random.choice([0, 1], size=num_features)  # 1 = include feature, 0 = exclude
+        individual = np.random.choice([0, 1], size=num_features)
         population.append(individual)
     return np.array(population)
 
 
 def fitness(individual):
     selected_features = [i for i in range(num_features) if individual[i] == 1]
-    if len(selected_features) == 0:  # Penalize empty feature sets
+    if len(selected_features) == 0:
         return 0
     X_selected = X_scaled[:, selected_features]
     model = LogisticRegression(max_iter=1000)
-    scores = cross_val_score(model, X_selected, y, cv=5, scoring='roc_auc')  # 5-fold CV AUC
+    scores = cross_val_score(model, X_selected, y, cv=5, scoring='roc_auc')
     return np.mean(scores)
 
 
 def selection(population, fitness_scores):
-    sorted_indices = np.argsort(fitness_scores)[::-1]  # Sort by fitness in descending order
-    selected = population[sorted_indices[:population_size // 2]]  # Select top 50%
+    sorted_indices = np.argsort(fitness_scores)[::-1]
+    selected = population[sorted_indices[:population_size // 2]]  #
     return selected
 
 
