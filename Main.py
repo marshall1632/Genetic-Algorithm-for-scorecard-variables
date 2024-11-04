@@ -1,8 +1,11 @@
+
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
+
 
 # Load dataset
 data = pd.read_csv('data/bank-additional-full.csv', sep=';')
@@ -17,10 +20,12 @@ X_scaled = scaler.fit_transform(X_encoded)
 feature_names = X_encoded.columns.tolist()
 
 # Genetic Algorithm Parameters
-population_size = 41188
+population_size = 100
 num_generations = 20
 mutation_rate = 0.1
 num_features = X_scaled.shape[1]  # Number of features
+
+print("the process is starting now")
 
 
 def initialize_population():
@@ -62,12 +67,12 @@ def mutate(individual):
 
 
 population = initialize_population()
+best_scores = []  # Track best AUC per generation
 
 for generation in range(num_generations):
-
     fitness_scores = np.array([fitness(ind) for ind in population])
-
     best_score = np.max(fitness_scores)
+    best_scores.append(best_score)  # Store the best score for visualization
     print(f"Generation {generation + 1} - Best AUC: {best_score:.4f}")
 
     selected_population = selection(population, fitness_scores)
@@ -83,6 +88,27 @@ for generation in range(num_generations):
 
 final_fitness_scores = np.array([fitness(ind) for ind in population])
 best_individual = population[np.argmax(final_fitness_scores)]
-best_features = [feature_names[i] for i in range(num_features) if best_individual[i] == 1]
+best_features = [feature_names[i] for i in range(num_features) if best_individual[i] == 1 and feature_names[i] in data.columns]
 
 print("\nBest feature subset:", best_features)
+
+
+# Visualization of Best Fitness Score over Generations
+plt.figure(figsize=(12, 6))
+plt.plot(range(1, num_generations + 1), best_scores, marker='o', color='b', label='Best AUC per Generation')
+plt.xlabel('Generation')
+plt.ylabel('Best AUC Score')
+plt.title('Best Fitness Score (AUC) Across Generations')
+plt.legend()
+plt.grid()
+plt.show()
+
+# Visualization of Selected Features and their Frequency
+feature_counts = np.array(best_individual)  # Binary array of the best features
+selected_features = [feature_names[i] for i in range(num_features) if feature_counts[i] == 1]
+
+plt.figure(figsize=(10, 8))
+plt.barh(selected_features, feature_counts[feature_counts == 1], color='teal')
+plt.xlabel('Frequency (Selected Features)')
+plt.title('Feature Importance in the Best Feature Subset')
+plt.show()
